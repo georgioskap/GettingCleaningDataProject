@@ -1,4 +1,5 @@
-# Quiz 1 question 1 included a code book
+
+### --- Reads the various files from the original dataset and created one table with all the data. 
 
 setwd("UCI HAR Dataset")
 
@@ -17,9 +18,13 @@ data_train <- cbind(subject_train, y_train, x_train)
 # Merge Test and Train data vertically so that all data is in one table
 data_all <- rbind(data_test, data_train)
 
+### --- Uses a file containing the column names to create user friendly column names (rather than V1, V2, etc.). 
+
 # Name the variables using the information from the files we are given
 features_names <- read.table("features.txt")
 names(data_all) <- c("SubjectID","ActivityID", as.vector(features_names$V2))
+
+### --- Uses a file describing Activities to create a user friendly column (with names rather than IDs). 
 
 # Read Activity Labels data and use it to create Activity (name)
 # Remove Activity ID as we have user friendly Activity
@@ -27,11 +32,15 @@ activity_labels <- read.table("activity_labels.txt", col.names=c("ActivityID","A
 data_all <- merge(data_all[,], activity_labels, sort=FALSE)
 data_all$ActivityID <- NULL
 
-# Keep measure columns that are about mean (not menFreq) or standard deviation. 
+### --- Keeps only measures around mean() and std(). 
+
+# Keep measure columns that are about mean (not meanFreq) or standard deviation. 
 # Also the SubjectID and Activity columns (reverse their order)
 keep_colnames <- grep("*SubjectID|Activity|mean\\(|std*",colnames(data_all))
 data_keep <- data_all[,keep_colnames]
 data_keep <- data_keep[c(2,1,3:ncol(data_keep))]
+
+### --- Creates even friendlier column names for the measures kept, using gsub(). 
 
 # Create user friendly columnn names for the measures by:
 #    Replacing initial "t" with "time-"
@@ -42,6 +51,8 @@ data_keep <- data_keep[c(2,1,3:ncol(data_keep))]
 #    Replacing "Mag" with "Magnitude"
 #    Removing "(", ")" and ","
 names(data_keep) <- gsub(",|\\(|\\)", "", gsub("^t", "time-", gsub("^f", "fft-", gsub("BodyBody", "Body", gsub("Acc", "Accelerometer", gsub("Gyro", "Gyroscope", gsub("Mag","Magnitude", names(data_keep))))))))
+
+### --- Creates the aggregated dataset (using mean for all measures) and exports to commma-separates file
 
 # Create tidy data set by aggregating (using mean) by SubjectID and Activity
 data_tidy <- aggregate(. ~ SubjectID + Activity, data_keep, FUN=mean, na.action=na.pass, na.rm=TRUE)
